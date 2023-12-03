@@ -9,6 +9,44 @@ from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
+def check_ivr_response(ivr_response, allowed_responses):
+    client = OpenAI()
+
+    # Create the thread
+    thread = client.beta.threads.create(
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an assistant named 'IVR assistant level one'. Your task is to validate IVR responses against a list of allowed phrases and determine if they match closely enough."
+            },
+            {
+                "role": "user",
+                "content": f"IVR response: '{ivr_response}'. Allowed responses are: {', '.join(allowed_responses)}."
+            }
+        ]
+    )
+
+    # Retrieve the assistant ID for 'IVR assistant level one'
+    # This step assumes you have the assistant ID available. Replace 'your_assistant_id' with the actual ID.
+    assistant_id = "your_assistant_id"
+
+    # Run the thread with the assistant
+    try:
+        run = client.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=assistant_id
+        )
+
+        # Assuming the assistant responds with only "OK" or "NOK"
+        response = run.messages[-1]['content']  # Get the last message, which should be the response
+        return response.strip()
+
+    except Exception as e:
+        # Handle exceptions
+        print(f"Error: {e}")
+        return None
+
+
 def read_allowed_responses(filename):
     """
     Reads allowed responses from a CSV file and returns them as a list.

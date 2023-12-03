@@ -157,9 +157,20 @@ def main():
         else:
             intent = intent_or_question  # Directly use the intent if no clarifying question
 
-        # Route call based on intent
-        if intent in ["pass_to_agent", "book_an_engineer", "make_a_complaint", "cancel_appointment", "default_dropout"]:
-            agi.set_extension("101")  # Route to extension 101
+        # Route call based on intent to the respective hunt group
+        if intent == "pass_to_agent":
+            agi.set_extension("201")  # Route to hunt group 201
+        elif intent == "book_an_engineer":
+            agi.set_extension("202")  # Route to hunt group 202
+        elif intent == "make_a_complaint":
+            agi.set_extension("203")  # Route to hunt group 203
+        elif intent == "cancel_appointment":
+            agi.set_extension("204")  # Route to hunt group 204
+        elif intent == "default_dropout":
+            agi.set_extension("205")  # Route to hunt group 205 (default/fallback)
+        else:
+            agi.verbose("Unrecognized intent received.")
+            agi.set_extension("205")  # Fallback to a default extension if intent is not recognized
 
     except Exception as e:
         agi.verbose("Error: " + str(e))

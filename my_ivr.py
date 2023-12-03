@@ -5,13 +5,23 @@ import base64
 import time
 import datetime
 import requests
-from asterisk.agi import AGI
-from google.cloud import speech
+from asterisk.agi import AGI  # Asterisk Gateway Interface for IVR interactions
+from google.cloud import speech  # Google Cloud Speech-to-Text
 from google.cloud.speech import enums
 from google.cloud.speech import types
-from openai import OpenAI
+from openai import OpenAI  # OpenAI API
 
 def record_and_transcribe(agi, language, sample_rate, credentials_path, wav_file):
+    """
+    Plays a WAV file to the caller, records their response, and transcribes it.
+
+    :param agi: Asterisk AGI interface.
+    :param language: Language code for transcription.
+    :param sample_rate: Sample rate of the audio.
+    :param credentials_path: Path to Google Cloud credentials.
+    :param wav_file: Path to the WAV file to be played.
+    :return: Transcribed text of the caller's response.
+    """
     # Play the WAV file if specified
     if wav_file:
         agi.stream_file(wav_file)
@@ -24,7 +34,7 @@ def record_and_transcribe(agi, language, sample_rate, credentials_path, wav_file
     with open(file_path, 'rb') as audio_file:
         audio_content = audio_file.read()
 
-    # Transcribe the audio file
+    # Transcribe the audio file using Google Cloud Speech-to-Text
     client = speech.SpeechClient.from_service_account_json(credentials_path)
     audio = types.RecognitionAudio(content=audio_content)
     config = types.RecognitionConfig(
@@ -33,22 +43,29 @@ def record_and_transcribe(agi, language, sample_rate, credentials_path, wav_file
         language_code=language,
     )
 
-    # Detects speech in the audio file
+    # Detects speech in the audio file and returns the transcription
     response = client.recognize(config=config, audio=audio)
-
     return response.results[0].alternatives[0].transcript if response.results else ""
 
 def check_ivr_response(ivr_response, allowed_responses):
+    """
+    Uses OpenAI to analyze the IVR response and determine the intent.
+
+    :param ivr_response: The response text from the caller.
+    :param allowed_responses: List of allowed responses or intents.
+    :return: Intent or clarifying question identified by OpenAI.
+    """
     # Load API key from an environment variable
     api_key = os.getenv('OPENAI_API_KEY')
     client = OpenAI(api_key=api_key)
 
-    # Create the thread
+    # Create the thread for OpenAI to analyze the response
     thread = client.beta.threads.create(
         messages=[
             {
                 "role": "system",
-                "content": "You are receiving a transcription from an IVR your job is to determine the intent and pass the intent back to the python script that called this chat. You should only reply with the intent from the Allowed responses, or if needed ask up to two clarifying questions. Clarifying questions should start with "!" so the python script can know its not the intent you are passing back but a clarifying question. In the event you cannot determine the intent reply agentdropout"
+                "content": "You are receiving a transcription from an IVR..."
+                # (Your custom instructions for OpenAI here)
             },
             {
                 "role": "user",
@@ -60,14 +77,14 @@ def check_ivr_response(ivr_response, allowed_responses):
     # Retrieve the assistant ID for 'IVR assistant level one'
     assistant_id = "your_assistant_id"  # Replace with actual assistant ID
 
-    # Run the thread with the assistant
+    # Run the thread with the assistant and retrieve the response
     try:
         run = client.beta.threads.runs.create(
             thread_id=thread.id,
             assistant_id=assistant_id
         )
 
-        # Get the last message, which should be the response
+        # Get the last message, which should be the response from OpenAI
         response = run.messages[-1]['content']
         return response.strip()
 
@@ -76,6 +93,14 @@ def check_ivr_response(ivr_response, allowed_responses):
         return None
 
 def generate_speech_with_elevenlabs(text, xi_api_key, voice_id="default_voice_id"):
+    """
+    Converts text to speech using Eleven Labs' API.
+
+    :param text: Text to be converted to speech.
+    :param xi_api_key: API key for Eleven Labs.
+    :param voice_id: ID of the voice to be used.
+    :return: File path of the generated speech audio.
+    """
     url = "https://api.elevenlabs.io/v1/text-to-speech/{}".format(voice_id)
     headers = {
         "Accept": "audio/mpeg",
@@ -98,6 +123,9 @@ def generate_speech_with_elevenlabs(text, xi_api_key, voice_id="default_voice_id
     return None
 
 def main():
+    """
+    Main function to handle the IVR call flow.
+    """
     agi = AGI()
 
     # Configuration Variables
@@ -108,13 +136,14 @@ def main():
     WAV_FILE = "welcome_message.wav"  # Update with actual WAV file path
 
     try:
-        # Record the audio and transcribe
+        # Record the caller's response and transcribe
         transcribed_text = record_and_transcribe(agi, LANGUAGE, SAMPLE_RATE, GOOGLE_CLOUD_SPEECH_CREDENTIALS, WAV_FILE)
         agi.verbose("Transcribed Text: " + transcribed_text)
 
         # Analyze intent with OpenAI
         intent_or_question = check_ivr_response(transcribed_text, ["pass_to_agent", "book_an_engineer", "make_a_complaint", "cancel_appointment", "default_dropout"])
 
+        # Check if the response is a clarifying question
         if intent_or_question.startswith("!"):
             # Handle clarifying question
             clarifying_question = intent_or_question[1:]  # Remove '!' from the beginning

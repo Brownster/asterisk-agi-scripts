@@ -1,0 +1,55 @@
+import os
+from openai import OpenAI
+
+# Load API key from an environment variable
+api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=api_key)
+
+
+def check_ivr_response(ivr_response, allowed_responses):
+    client = OpenAI()
+
+    # Create the thread
+    thread = client.beta.threads.create(
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an assistant named 'IVR assistant level one'. Your task is to validate IVR responses against a list of allowed phrases and determine if they match closely enough."
+            },
+            {
+                "role": "user",
+                "content": f"IVR response: '{ivr_response}'. Allowed responses are: {', '.join(allowed_responses)}."
+            }
+        ]
+    )
+
+    # Retrieve the assistant ID for 'IVR assistant level one'
+    # This step assumes you have the assistant ID available. Replace 'your_assistant_id' with the actual ID.
+    assistant_id = "your_assistant_id"
+
+    # Run the thread with the assistant
+    try:
+        run = client.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=assistant_id
+        )
+
+        # Assuming the assistant responds with only "OK" or "NOK"
+        response = run.messages[-1]['content']  # Get the last message, which should be the response
+        return response.strip()
+
+    except Exception as e:
+        # Handle exceptions
+        print(f"Error: {e}")
+        return None
+
+# Example usage
+ivr_response = "System Error"
+allowed_responses = [
+    "Is your toilet upstairs or downstairs",
+    "Is your toilet upstairs or down",
+    "Is your toilet upstairs"
+]
+
+result = check_ivr_response(ivr_response, allowed_responses)
+print(result)

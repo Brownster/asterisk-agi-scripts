@@ -48,7 +48,7 @@ def check_ivr_response(ivr_response, allowed_responses):
         messages=[
             {
                 "role": "system",
-                "content": "You are an assistant named 'IVR assistant level one'. Your task is to validate IVR responses against a list of allowed phrases and determine if they match closely enough."
+                "content": "You are receiving a transcription from an IVR your job is to determine the intent and pass the intent back to the python script that called this chat. You should only reply with the intent from the Allowed responses, or if needed ask up to two clarifying questions. Clarifying questions should start with "!" so the python script can know its not the intent you are passing back but a clarifying question. In the event you cannot determine the intent reply agentdropout"
             },
             {
                 "role": "user",

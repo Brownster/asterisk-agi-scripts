@@ -64,7 +64,7 @@ def check_ivr_response(ivr_response, allowed_responses):
         messages=[
             {
                 "role": "system",
-                "content": "You are receiving a transcription from a customer service IVR your job is to determine the intent of the customer and pass the intent back to the python script that called this chat from a list of allowed intents. You should only reply with the intent or if needed ask a  up to two clarifying questions. Clarifying questions should start with "!" so the python script can know its not the intent but you are passing back but a clarifying question. or in the event you cannot determine the intent reply agentdropout. The allowed intents are will be passed to you with the transcription."
+                "content": "You are receiving a transcription from a customer service IVR your job is to determine the intent of the customer and pass the intent back to the python script that called this chat from a list of allowed intents. You should only reply with the intent or if needed ask a  up to two clarifying questions. Clarifying questions should start with "!" so the python script can know its not the intent but you are passing back but a clarifying question. or in the event you cannot determine the intent reply defaultdropout. The allowed intents are will be passed to you with the transcription."
                 
             },
             {

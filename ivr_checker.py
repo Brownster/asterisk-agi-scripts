@@ -84,20 +84,21 @@ def main():
         agi.verbose("Transcribed Text: " + transcribed_text)
 
         # Check if the response is allowed
-        is_allowed = check_response(transcribed_text, allowed_responses)
+        allowed_responses = read_allowed_responses(allowed_responses_file)
+        ivr_check_result = check_ivr_response(transcribed_text, allowed_responses)
+
+        # Interpret the result from your IVR assistant
+        is_allowed = ivr_check_result == "OK"
+
         if is_allowed:
-            agi.verbose("Response is allowed.")
+            agi.verbose("Response matches intent.")
         else:
-            agi.verbose("Response is not allowed.")
+            agi.verbose("Response does not match intent.")
 
         # Log results to a CSV file
         log_results('results_log.csv', transcribed_text, is_allowed)
 
         # Hang up the call
-        agi.hangup()
-
-    except Exception as e:
-        agi.verbose("Error: " + str(e))
         agi.hangup()
 
     except Exception as e:

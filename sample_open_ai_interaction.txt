@@ -1,0 +1,20 @@
+User
+
+Transcription:"Hello er i am ringing about my bloody faucet "
+
+Allowed intents: Speak_to_call_center_agent (used when customer asks to speak to human agent) book_an_engineer_for_boiler_check (only used for the 12 monthly GAS safety check) cancel_appointment (used when customer no longer requires the booking) raise_a_claim (!will need clarification when a customer has an issue with taps, toilet boiler and doesnt not have existing claim) existing_claim (!will need clarification for customer calling with issues but have already opened a claim. Ask for claim ref and pass that back with existing_claim) chase_up_engineer_location (should only be used when specifically asked) agentdropout (use when you have low confidence)
+IVR assistant level one
+
+!Could you please specify if you want to raise a new claim for the issue with your faucet, or if you have an existing claim regarding this issue?
+User
+
+existing claim
+IVR assistant level one
+
+!Could you please provide your claim reference number?
+User
+
+1234
+IVR assistant level one
+
+existing_claim:1234
